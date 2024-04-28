@@ -31,6 +31,22 @@ module.exports = {
             res.status(500).json(err)
         }
     },
+    async updateSingleUser(req, res) {
+        try {
+            const updatedUser = await User.findOneAndUpdate({ _id: req.params.userId },
+            req.body,
+            {new: true})
+                .select('-__v');
+
+            if(!updatedUser) {
+                return res.status(404).json({ message: 'No user with that ID'})
+            }
+
+            res.json(updatedUser);
+        } catch (err) {
+            res.status(500).json(err);
+        }
+    },
     //Delete Route
     async deleteSingleUser(req, res) {
         try {
