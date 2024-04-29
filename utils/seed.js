@@ -1,5 +1,6 @@
 const connection = require('../config/connection');
-const { User, Thought } = require('../models');
+const User = require('../models/User');
+const Thought = require('../models/Thought');
 const data = require('./data');
 
 connection.on('error', (err) => {
@@ -10,22 +11,31 @@ async function seed() {
     try {
         await connection;
 
-        // Clear existing data
-        await User.deleteMany();
-        await Thought.deleteMany();
+        // Seed thoughts with reactions
+        const thoughtsWithReactions = data.thoughtData.map((thought, index) => {
+            const reactions = [
+                { reactionBody: 'Like', username: 'user1' },
+                { reactionBody: 'Love', username: 'user2' }
+                // Add more reactions as needed
+            ];
 
-        // Insert users into the database
-        const createdUsers = await User.insertMany(userData);
+            return {
+                ...thought,
+                reactions: reactions
+            };
+        });
 
-        // Extract user IDs
-        const userIds = createdUsers.map(user => user._id);
+        // Create each user individually
+        for (const userData of data.userData) {
+            const user = new User(userData);
+            await user.save();
+        }
 
-        // Seed thoughts with user IDs
-        const thoughtsWithUserIds = thoughtData.map((thought, index) => ({
-            ...thought,
-            username: userIds[index % userIds.length], // Cycling through user IDs
-        }));
-        await Thought.insertMany(thoughtsWithUserIds);
+        // Create each thought individually
+        for (const thoughtData of thoughtsWithReactions) {
+            const thought = new Thought(thoughtData);
+            await thought.save();
+        }
 
         console.log('Data successfully seeded.');
         process.exit(0);
@@ -35,5 +45,4 @@ async function seed() {
     }
 }
 
-// Call the seed function
 seed();
