@@ -37,6 +37,14 @@ async function seed() {
             await thought.save();
         }
 
+        // Establish friendships between users
+        const users = await User.find();
+        const [user1, user2] = users;
+        user1.friends.push(user2);
+        user2.friends.push(user1);
+        await user1.save();
+        await user2.save();
+
         console.log('Data successfully seeded.');
         process.exit(0);
     } catch (error) {

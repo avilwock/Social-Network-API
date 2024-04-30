@@ -14,7 +14,7 @@ module.exports = {
         try {
             const thought = await Thought.findOne({ _id: req.params.thoughtId })
             if (!thought) {
-                return res.status(404).json({ message: 'No videos with that ID' });
+                return res.status(404).json({ message: 'No thoughts with that ID' });
             }
 
             res.json(thought);
@@ -24,25 +24,32 @@ module.exports = {
     },
     async createThought(req, res) {
         try {
-            const thought = await Thought.creat(req.body);
-            const user = await User.findOneAndUpdate(
-                { _id: req.body.userId },
-                { $addToSet: { thoughts: thought._id }},
-                {new: true }
-            );
-
-            if(!user) {
+            // Create the thought
+            const thought = await Thought.create(req.body);
+    
+            // Find the user by ID
+            const user = await User.findById(req.body.userId);
+    
+            // If user not found, return 404 error
+            if (!user) {
                 return res.status(404).json({
-                    message: 'Video created, but found no user with that ID',
-                })
+                    message: 'User not found with the provided ID',
+                });
             }
-
-            res.json('Created the video');
+    
+            // Add the thought's ID to the user's thoughts array
+            user.thoughts.push(thought._id);
+    
+            // Save the user with the updated thoughts array
+            await user.save();
+    
+            res.json('Created the thought');
         } catch (err) {
             console.log(err);
             res.status(500).json(err);
         }
     },
+    
     async updateThought(req, res) {
         try {
             const thought = await Thought.findOneAndUpdate(
@@ -73,6 +80,42 @@ module.exports = {
             res.status(500).json(err);
         }
     },
+    async getReactions(req, res) {
+        try {
+            const thought = await Thought.findOne({ _id: req.params.thoughtId }).select('-__v');
+    
+            if (!thought) {
+                return res.status(404).json({ message: 'No thought with that ID' });
+            }
+    
+            return res.status(200).json({ reactions: thought.reactions });
+        } catch (error) {
+            console.error('Error getting reactions for thought:', error);
+            return res.status(500).json({ message: 'Server error' });
+        }
+    },
+    
+    async getSingleReaction(req, res) {
+        try {
+            const thought = await Thought.findOne({ _id: req.params.thoughtId }).select('-__v');
+    
+            if (!thought) {
+                return res.status(404).json({ message: 'No thought with that ID' });
+            }
+    
+            const reaction = thought.reactions.find(reaction => reaction._id == req.params.reactionId);
+    
+            if (!reaction) {
+                return res.status(404).json({ message: 'No reaction with that ID' });
+            }
+    
+            return res.status(200).json({ reaction });
+        } catch (error) {
+            console.error('Error getting single reaction:', error);
+            return res.status(500).json({ message: 'Server error' });
+        }
+    },
+    
     // async createReactions(req, res) {
     //     try {
     //         const thoughts = await Thought.find()
@@ -111,13 +154,13 @@ module.exports = {
                 return res.status(404).json({ message: 'No thought with that ID' });
             }
     
-            const reactionToDelete = thought.reactions.id(req.params.reactionId);
-            if (!reactionToDelete) {
+            const reactionIndex = thought.reactions.findIndex(reaction => reaction._id == req.params.reactionId);
+            if (reactionIndex === -1) {
                 return res.status(404).json({ message: 'No reaction with that ID' });
             }
     
-            // Remove the reaction
-            reactionToDelete.remove();
+            // Remove the reaction from the reactions array
+            thought.reactions.splice(reactionIndex, 1);
     
             const updatedThought = await thought.save();
             res.json(updatedThought);
@@ -126,4 +169,5 @@ module.exports = {
             res.status(500).json(err);
         }
     }
+    
 }
