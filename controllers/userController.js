@@ -106,6 +106,67 @@ module.exports = {
             console.error('Error getting single friend:', error);
             return res.status(500).json({ message: 'Server error' });
         }
+    },
+    async addFriend(req, res) {
+        try {
+            const userId = req.params.userId;
+            const friendId = req.params.friendId;
+
+            // Find the user by ID
+            const user = await User.findById(userId);
+
+            if (!user) {
+                return res.status(404).json({ message: 'User not found' });
+            }
+
+            // Check if the friend already exists in user's friends list
+            if (user.friends.includes(friendId)) {
+                return res.status(400).json({ message: 'Friend already added' });
+            }
+
+            // Check if adding this friend would create a circular loop
+            const friend = await User.findById(friendId);
+            if (!friend || friend.friends.includes(userId)) {
+                return res.status(400).json({ message: 'Adding this friend would create a circular loop' });
+            }
+
+            // Add friend to user's friends list
+            user.friends.push(friendId);
+            await user.save();
+
+            res.status(200).json({ message: 'Friend added successfully', user });
+        } catch (error) {
+            console.error('Error adding friend:', error);
+            return res.status(500).json({ message: 'Server error' });
+        }
+    },
+    async removeFriend(req, res) {
+        try {
+            const userId = req.params.userId;
+            const friendId = req.params.friendId;
+
+            // Find the user by ID
+            const user = await User.findById(userId);
+
+            if (!user) {
+                return res.status(404).json({ message: 'User not found' });
+            }
+
+            // Check if the friend exists in user's friends list
+            const friendIndex = user.friends.indexOf(friendId);
+            if (friendIndex === -1) {
+                return res.status(404).json({ message: 'Friend not found in user\'s friend list' });
+            }
+
+            // Remove the friend from the user's friend list
+            user.friends.splice(friendIndex, 1);
+            await user.save();
+
+            res.status(200).json({ message: 'Friend removed successfully', user });
+        } catch (error) {
+            console.error('Error removing friend:', error);
+            return res.status(500).json({ message: 'Server error' });
+        }
     }
     
     

@@ -24,14 +24,18 @@ module.exports = {
     },
     async createThought(req, res) {
         try {
+            console.log('Request Body:', req.body);
+    
             // Create the thought
             const thought = await Thought.create(req.body);
     
             // Find the user by ID
             const user = await User.findById(req.body.userId);
+            console.log('User:', user);
     
             // If user not found, return 404 error
             if (!user) {
+                console.log('User not found with the provided ID');
                 return res.status(404).json({
                     message: 'User not found with the provided ID',
                 });
@@ -45,7 +49,7 @@ module.exports = {
     
             res.json('Created the thought');
         } catch (err) {
-            console.log(err);
+            console.error(err);
             res.status(500).json(err);
         }
     },
