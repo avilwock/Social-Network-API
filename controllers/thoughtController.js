@@ -116,14 +116,36 @@ module.exports = {
         }
     },
     
-    // async createReactions(req, res) {
-    //     try {
-    //         const thoughts = await Thought.find()
-    //         res.json(thoughts);
-    //     } catch (err) {
-    //         res.status(500).json(err)
-    //     }
-    // },
+    async createReaction(req, res) {
+        try {
+            const thought = await Thought.findById(req.params.thoughtId);
+            if (!thought) {
+                return res.status(404).json({ message: 'No thought with that ID' });
+            }
+    
+            // Create a new reaction object
+            const newReaction = {
+                // Assuming req.body contains necessary fields for the reaction
+                // For example: userId, content, etc.
+                // Modify this according to your schema
+                username: req.body.username,
+                reactionBody: req.body.reactionBody
+            };
+    
+            // Add the new reaction to the thought's reactions array
+            thought.reactions.push(newReaction);
+    
+            // Save the updated thought with the new reaction
+            const updatedThought = await thought.save();
+    
+            // Return the updated thought with the new reaction
+            res.status(201).json(updatedThought);
+        } catch (err) {
+            console.log(err);
+            res.status(500).json(err);
+        }
+    },
+    
     async updateReaction(req, res) {
         try {
             const thought = await Thought.findById(req.params.thoughtId);

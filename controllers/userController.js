@@ -4,7 +4,12 @@ const User = require('../models/User');
 module.exports = {
     async getUsers(req, res) {
         try {
-            const users = await User.find().populate('thoughts');
+            const users = await User.find()
+                .populate({
+                    path: 'thoughts',
+                    populate: { path: 'reactions', populate: { path: 'username', select: 'username' } }
+                })
+                .populate('friends', 'username');
             res.json(users);
         } catch (err) {
             res.status(500).json(err);
@@ -63,7 +68,47 @@ module.exports = {
         } catch (err) {
             res.status(500).json(err);
         }
+    },
+    async getFriends(req, res) {
+        try {
+            const user = await User.findById(req.params.userId).select('-__v');
+    
+            if (!user) {
+                return res.status(404).json({ message: 'No user found with that ID' });
+            }
+    
+            // Retrieve user's friends
+            const friends = await User.find({ _id: { $in: user.friends } }).select('username');
+    
+            res.status(200).json({ friends });
+        } catch (error) {
+            console.error('Error getting friends:', error);
+            return res.status(500).json({ message: 'Server error' });
+        }
+    },
+    async getSingleFriend(req, res) {
+        try {
+            const user = await User.findOne({ _id: req.params.userId }).select('-__v');
+    
+            if (!user) {
+                return res.status(404).json({ message: 'No user with that ID' });
+            }
+    
+            const friendId = req.params.friendId;
+            const friend = user.friends.find(friend => friend._id == friendId);
+    
+            if (!friend) {
+                return res.status(404).json({ message: 'No friend with that ID' });
+            }
+    
+            return res.status(200).json({ friend });
+        } catch (error) {
+            console.error('Error getting single friend:', error);
+            return res.status(500).json({ message: 'Server error' });
+        }
     }
+    
+    
 }
 
 
