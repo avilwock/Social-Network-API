@@ -1,14 +1,20 @@
+//calls in the connection
 const connection = require('../config/connection');
+//imports user model
 const User = require('../models/User');
+//imports thought model
 const Thought = require('../models/Thought');
+//imports data
 const data = require('./data');
 
+//sets up connection to server
 connection.on('error', (err) => {
     console.error('MongoDB connection error:', err);
 });
-
+//seeds the data
 async function seed() {
     try {
+        //ensures a connection to server before running
         await connection;
 
         // Seed thoughts with reactions

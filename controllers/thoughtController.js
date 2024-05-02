@@ -1,7 +1,11 @@
+//imports thoughts model
 const Thought = require('../models/Thought')
+//imports User model
 const User = require('../models/User')
 
+//creates the routes
 module.exports = {
+    //the get thoughts route finds all thoughts in the database
     async getThoughts(req, res) {
         try {
             const thoughts = await Thought.find();
@@ -10,9 +14,11 @@ module.exports = {
             res.status(500).json(err);
         }
     },
+    //finds a single thought within the database
     async getSingleThought(req, res) {
         try {
             const thought = await Thought.findOne({ _id: req.params.thoughtId })
+            //if no thoughts found, an error is returned
             if (!thought) {
                 return res.status(404).json({ message: 'No thoughts with that ID' });
             }
@@ -22,6 +28,7 @@ module.exports = {
                 res.status(500).json(err);
             }
     },
+    //create thought route, finds the user by ID to add the thought to it
     async createThought(req, res) {
         try {
             console.log('Request Body:', req.body);
@@ -53,7 +60,7 @@ module.exports = {
             res.status(500).json(err);
         }
     },
-    
+    //update a thought, finds one thought, and if valid ID, pushes the changes to it
     async updateThought(req, res) {
         try {
             const thought = await Thought.findOneAndUpdate(
@@ -71,6 +78,7 @@ module.exports = {
             res.status(500).json(err);
         }
     },
+    //delete thought route, if the id is found, the thought is deleted
     async deleteThought(req, res) {
         try {
             const thought = await Thought.findOneAndDelete({ _id: req.params.thoughtId})
@@ -84,6 +92,7 @@ module.exports = {
             res.status(500).json(err);
         }
     },
+    //get reaction. This finds the thought which holds the reaction, if present, then pulls t he reaction too
     async getReactions(req, res) {
         try {
             const thought = await Thought.findOne({ _id: req.params.thoughtId }).select('-__v');
@@ -98,7 +107,7 @@ module.exports = {
             return res.status(500).json({ message: 'Server error' });
         }
     },
-    
+    //get singleReaction. This find a single reaction based on thought, thought id, and reactionid
     async getSingleReaction(req, res) {
         try {
             const thought = await Thought.findOne({ _id: req.params.thoughtId }).select('-__v');
@@ -119,9 +128,10 @@ module.exports = {
             return res.status(500).json({ message: 'Server error' });
         }
     },
-    
+    //This allows the creation of reactions.
     async createReaction(req, res) {
         try {
+            //this finds the thought to add the reaction to
             const thought = await Thought.findById(req.params.thoughtId);
             if (!thought) {
                 return res.status(404).json({ message: 'No thought with that ID' });
@@ -129,9 +139,7 @@ module.exports = {
     
             // Create a new reaction object
             const newReaction = {
-                // Assuming req.body contains necessary fields for the reaction
-                // For example: userId, content, etc.
-                // Modify this according to your schema
+                //the variables necessary to create a new reaction
                 username: req.body.username,
                 reactionBody: req.body.reactionBody
             };
@@ -149,7 +157,7 @@ module.exports = {
             res.status(500).json(err);
         }
     },
-    
+    //this is to update the reaction. 
     async updateReaction(req, res) {
         try {
             const thought = await Thought.findById(req.params.thoughtId);
@@ -172,7 +180,7 @@ module.exports = {
             res.status(500).json(err);
         }
     },
-    
+    //route to delete reaction
     async deleteReaction(req, res) {
         try {
             const thought = await Thought.findById(req.params.thoughtId);

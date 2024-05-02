@@ -1,20 +1,24 @@
-const { Types: { ObjectId } } = require('mongoose');
+//import user model
 const User = require('../models/User');
 
 module.exports = {
+    //get users
     async getUsers(req, res) {
         try {
             const users = await User.find()
+            //show thoughts and reactions
                 .populate({
                     path: 'thoughts',
                     populate: { path: 'reactions', populate: { path: 'username', select: 'username' } }
                 })
+                //shows friends
                 .populate('friends', 'username');
             res.json(users);
         } catch (err) {
             res.status(500).json(err);
         }
     },
+    //This route gets a single user's information
     async getSingleUser(req, res) {
         try {
             console.log('req.params.userId:', req.params.userId);
@@ -30,6 +34,7 @@ module.exports = {
             res.status(500).json(err);
         }
     },
+    //this route creates a user
     async createUser(req, res) {
         try {
             const dbUserData = await User.create(req.body);
@@ -38,6 +43,7 @@ module.exports = {
             res.status(500).json(err)
         }
     },
+    //this route updates a user
     async updateSingleUser(req, res) {
         try {
             const updatedUser = await User.findOneAndUpdate({ _id: req.params.userId },
@@ -69,6 +75,7 @@ module.exports = {
             res.status(500).json(err);
         }
     },
+    //get friends route. 
     async getFriends(req, res) {
         try {
             const user = await User.findById(req.params.userId).select('-__v');
@@ -86,6 +93,7 @@ module.exports = {
             return res.status(500).json({ message: 'Server error' });
         }
     },
+    //this route finds a single friend for a user, using the users id and friend id
     async getSingleFriend(req, res) {
         try {
             const user = await User.findOne({ _id: req.params.userId }).select('-__v');
@@ -107,6 +115,7 @@ module.exports = {
             return res.status(500).json({ message: 'Server error' });
         }
     },
+    //add friend route, uses the userid, the friendid, to create a link between two people as friends
     async addFriend(req, res) {
         try {
             const userId = req.params.userId;
@@ -140,6 +149,7 @@ module.exports = {
             return res.status(500).json({ message: 'Server error' });
         }
     },
+    //deletes a friend from a user's list
     async removeFriend(req, res) {
         try {
             const userId = req.params.userId;
