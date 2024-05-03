@@ -61,6 +61,14 @@ Then open insomnia or mongodb compass to view the data interactions.
 
 To test routes, use insomnia.
 
+![alt text](images/SocialNetworkAPI1.png)
+
+![alt text](images/SocialNetworkAPI2.png)
+
+![alt text](images/SocialNetworkAPI3.png)
+
+![alt text](images/SocialNetworkAPI4.png)
+
 ## Credits
 
 With thanks to: 

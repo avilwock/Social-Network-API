@@ -7,13 +7,24 @@ module.exports = {
         try {
             const users = await User.find()
             //show thoughts and reactions
-                .populate({
-                    path: 'thoughts',
-                    populate: { path: 'reactions', populate: { path: 'username', select: 'username' } }
-                })
+                .populate({                    path: 'thoughts',
+                    populate: { 
+                        path: 'reactions',
+                        select: 'username'
+                    },
+                    })
                 //shows friends
-                .populate('friends', 'username');
-            res.json(users);
+                .populate('friends', 'username')
+                .select('-__v');
+                // Calculate and attach friend count for each user
+        const usersWithFriendCount = await Promise.all(users.map(async (user) => {
+            const friendCount = await User.countDocuments({ _id: { $in: user.friends } });
+            const userObject = user.toObject();
+            userObject.friendCount = friendCount;
+            return userObject;
+        }));
+
+        res.json(usersWithFriendCount);
         } catch (err) {
             res.status(500).json(err);
         }
@@ -27,6 +38,8 @@ module.exports = {
             if (!user) {
                 return res.status(404).json({ message: 'No user with that ID' });
             }
+
+            user.friendCount = user.friends.length;
     
             res.json(user);
         } catch (err) {
